@@ -1,13 +1,14 @@
 import io
-import zlib
 import os
+import zlib
+
 from Crypto.Util.number import bytes_to_long, long_to_bytes
 
 
 class L2Crypt:
-    __key = int("0xAC", 16)
+    KEY_111 = int("0xAC", 16)
 
-    __mod_origin = int(
+    MODULUS_413_ORIGIN = int(
         "97df398472ddf737ef0a0cd17e8d172f"
         "0fef1661a38a8ae1d6e829bc1c6e4c3c"
         "fc19292dda9ef90175e46e7394a18850"
@@ -18,7 +19,7 @@ class L2Crypt:
         "4551baa86a89dc38123dc1668fd72d83",
         16,
     )
-    __mod_no_origin = int(
+    MODULUS_ENCDEC = int(
         "75b4d6de5c016544068a1acf125869f4"
         "3d2e09fc55b8b1e289556daf9b875763"
         "5593446288b3653da1ce91c87bb1a5c1"
@@ -30,50 +31,30 @@ class L2Crypt:
         16,
     )
 
-    __exp_no_origin = int("1d", 16)
-    __exp_origin = int("35", 16)
+    EXPONENT_413 = int("35", 16)
+    EXPONENT_ENCDEC = int("1d", 16)
 
-    def __init__(self, original: bool = True):
-        self._mod = self.__mod_origin if original else self.__mod_no_origin
-        self._exp = self.__exp_origin if original else self.__exp_no_origin
-        self._filename = None
-        self._out_filename = None
-
-    @property
-    def filename(self):
-        return self._filename
-
-    @filename.setter
-    def filename(self, value):
-        self._filename = value
-
-    @property
-    def out_filename(self):
-        return self._out_filename
-
-    @out_filename.setter
-    def out_filename(self, value):
-        self._out_filename = value
-
-    def _out_write(self, result: bytes):
-        with open(self.out_filename, mode="wb") as out:
+    @staticmethod
+    def out_write(out_filename: str, result: bytes):
+        with open(out_filename, mode="wb") as out:
             out.write(result)
 
     def _decoding_111(self, file) -> io.BytesIO:
         data = io.BytesIO()
 
         for i in file.read():
-            data.write(bytes([i ^ self.__key]))
+            data.write(bytes([i ^ self.KEY_111]))
 
         data.seek(0)
         return data
 
-    def _decoding_413(self, file) -> io.BytesIO:
+    @staticmethod
+    def _decoding_413(file, mod, exp) -> io.BytesIO:
         data = io.BytesIO()
         block = file.read(128)
 
         while block:
-            block_data_bytes = long_to_bytes(pow(bytes_to_long(block), self._exp, self._mod))
+            block_data_bytes = long_to_bytes(pow(bytes_to_long(block), exp, mod))
             block_data_bytes_size = block_data_bytes[0]
 
             if block_data_bytes_size == 124:
@@ -87,9 +68,9 @@ class L2Crypt:
         data.seek(0)
         return data
 
-    def decoding(self, file_path: str):
-        self.filename = os.path.basename(file_path)
-        self.out_filename = "dec-" + self.filename
+    def decoding(self, file_path: str, original=True):
+        filename = os.path.basename(file_path)
+        out_filename = "dec_" + filename
 
         with open(file_path, "rb") as file:
             head = file.read(28).decode("UTF-16LE")
@@ -97,23 +78,27 @@ class L2Crypt:
 
             match version:
                 case 111:
-                    data: io.BytesIO = self._decoding_111(file)
-                    self._out_write(result=data.read())
+                    data: io.BytesIO = self._decoding_111(file)  # type: ignore[no-redef]
+                    self.out_write(out_filename, data.read())
                 case 413:
-                    data: io.BytesIO = self._decoding_413(file)
+                    mod = self.MODULUS_413_ORIGIN if original else self.MODULUS_ENCDEC
+                    exp = self.EXPONENT_413 if original else self.EXPONENT_ENCDEC
+
+                    data: io.BytesIO = self._decoding_413(file, mod, exp)  # type: ignore[no-redef]
 
                     data_size_bytes = data.read(4)
-                    data_size = int.from_bytes(data_size_bytes, byteorder='little')
+                    data_size = int.from_bytes(data_size_bytes, byteorder="little")
 
                     result = zlib.decompress(data.read())
 
                     result_size = len(result)
 
                     if data_size == result_size:
-                        self._out_write(result)
+                        self.out_write(out_filename, result)
+                        print(1)
                 case _:
                     ...
 
 
-l2crypt = L2Crypt(original=True)
-l2crypt.decoding(file_path='original_files/l2.ini')
+l2crypt = L2Crypt()
+l2crypt.decoding(file_path="original_files/l2.ini", original=True)

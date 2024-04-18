@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "l2crypt"
+version = "0.1.0"
+description = ""
+authors = ["Elia Samoylov <mymerrymailbox@mail.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12.2"
+pycryptodome = "^3.20.0"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.6.0"
+mypy = "^1.8.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+src = ["src"]
+extend-select = ["I"]
