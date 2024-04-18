@@ -8,7 +8,7 @@ from Crypto.Util.number import bytes_to_long, long_to_bytes
 class L2Crypt:
     KEY_111 = int("0xAC", 16)
 
-    MODULUS_413_ORIGIN = int(
+    MODULUS_413 = int(
         "97df398472ddf737ef0a0cd17e8d172f"
         "0fef1661a38a8ae1d6e829bc1c6e4c3c"
         "fc19292dda9ef90175e46e7394a18850"
@@ -95,7 +95,7 @@ class L2Crypt:
                     data: io.BytesIO = self._decoding_111(file)  # type: ignore[no-redef]
                     self.out_write(out_filename, data.read())
                 case 413:
-                    mod: int = self.MODULUS_413_ORIGIN if original else self.MODULUS_ENCDEC
+                    mod: int = self.MODULUS_413 if original else self.MODULUS_ENCDEC
                     exp: int = self.EXPONENT_413 if original else self.EXPONENT_ENCDEC
 
                     data: io.BytesIO = self._decoding_413(file, mod, exp)  # type: ignore[no-redef]
