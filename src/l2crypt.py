@@ -35,11 +35,17 @@ class L2Crypt:
     EXPONENT_ENCDEC = int("1d", 16)
 
     @staticmethod
-    def out_write(out_filename: str, result: bytes):
+    def out_write(
+        out_filename: str,
+        result: bytes,
+    ) -> None:
         with open(out_filename, mode="wb") as out:
             out.write(result)
 
-    def _decoding_111(self, file) -> io.BytesIO:
+    def _decoding_111(
+        self,
+        file: io.BufferedReader,
+    ) -> io.BytesIO:
         data = io.BytesIO()
 
         for i in file.read():
@@ -49,7 +55,11 @@ class L2Crypt:
         return data
 
     @staticmethod
-    def _decoding_413(file, mod, exp) -> io.BytesIO:
+    def _decoding_413(
+        file: io.BufferedReader,
+        mod: int,
+        exp: int,
+    ) -> io.BytesIO:
         data = io.BytesIO()
         block = file.read(128)
 
@@ -68,7 +78,11 @@ class L2Crypt:
         data.seek(0)
         return data
 
-    def decoding(self, file_path: str, original=True):
+    def decoding(
+        self,
+        file_path: str,
+        original=True,
+    ) -> None:
         filename = os.path.basename(file_path)
         out_filename = "dec_" + filename
 
@@ -81,8 +95,8 @@ class L2Crypt:
                     data: io.BytesIO = self._decoding_111(file)  # type: ignore[no-redef]
                     self.out_write(out_filename, data.read())
                 case 413:
-                    mod = self.MODULUS_413_ORIGIN if original else self.MODULUS_ENCDEC
-                    exp = self.EXPONENT_413 if original else self.EXPONENT_ENCDEC
+                    mod: int = self.MODULUS_413_ORIGIN if original else self.MODULUS_ENCDEC
+                    exp: int = self.EXPONENT_413 if original else self.EXPONENT_ENCDEC
 
                     data: io.BytesIO = self._decoding_413(file, mod, exp)  # type: ignore[no-redef]
 
@@ -95,7 +109,6 @@ class L2Crypt:
 
                     if data_size == result_size:
                         self.out_write(out_filename, result)
-                        print(1)
                 case _:
                     ...
 
