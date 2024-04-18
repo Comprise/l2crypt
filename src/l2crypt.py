@@ -54,12 +54,14 @@ class L2Crypt:
         data.seek(0)
         return data
 
-    @staticmethod
     def _decoding_413(
+        self,
         file: io.BufferedReader,
-        mod: int,
-        exp: int,
+        original: bool,
     ) -> io.BytesIO:
+        mod: int = self.MODULUS_413 if original else self.MODULUS_ENCDEC
+        exp: int = self.EXPONENT_413 if original else self.EXPONENT_ENCDEC
+
         data = io.BytesIO()
         block = file.read(128)
 
@@ -95,10 +97,7 @@ class L2Crypt:
                     data: io.BytesIO = self._decoding_111(file)  # type: ignore[no-redef]
                     self.out_write(out_filename, data.read())
                 case 413:
-                    mod: int = self.MODULUS_413 if original else self.MODULUS_ENCDEC
-                    exp: int = self.EXPONENT_413 if original else self.EXPONENT_ENCDEC
-
-                    data: io.BytesIO = self._decoding_413(file, mod, exp)  # type: ignore[no-redef]
+                    data: io.BytesIO = self._decoding_413(file, original)  # type: ignore[no-redef]
 
                     data_size_bytes = data.read(4)
                     data_size = int.from_bytes(data_size_bytes, byteorder="little")
