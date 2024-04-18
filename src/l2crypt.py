@@ -45,23 +45,25 @@ class L2Crypt:
     def _decoding_111(
         self,
         file: io.BufferedReader,
-    ) -> io.BytesIO:
+    ) -> bytes:
+        file.read(28)
         data = io.BytesIO()
 
         for i in file.read():
             data.write(bytes([i ^ self.KEY_111]))
 
         data.seek(0)
-        return data
+        return data.read()
 
     def _decoding_413(
         self,
         file: io.BufferedReader,
         original: bool,
-    ) -> io.BytesIO:
+    ) -> bytes:
         mod: int = self.MODULUS_413 if original else self.MODULUS_ENCDEC
         exp: int = self.EXPONENT_413 if original else self.EXPONENT_ENCDEC
 
+        file.read(28)
         data = io.BytesIO()
         block = file.read(128)
 
@@ -78,7 +80,18 @@ class L2Crypt:
             block = file.read(128)
 
         data.seek(0)
-        return data
+
+        data_size_bytes = data.read(4)
+        data_size = int.from_bytes(data_size_bytes, byteorder="little")
+
+        data_unzip = zlib.decompress(data.read())
+
+        data_unzip_size = len(data_unzip)
+
+        if data_size != data_unzip_size:
+            raise Exception
+
+        return data_unzip
 
     def decoding(
         self,
@@ -90,24 +103,16 @@ class L2Crypt:
 
         with open(file_path, "rb") as file:
             head = file.read(28).decode("UTF-16LE")
+            file.seek(0)
             version = int(head.lstrip("Lineage2Ver"))
 
             match version:
                 case 111:
-                    data: io.BytesIO = self._decoding_111(file)  # type: ignore[no-redef]
-                    self.out_write(out_filename, data.read())
+                    data: bytes = self._decoding_111(file)  # type: ignore[no-redef]
+                    self.out_write(out_filename, data)
                 case 413:
-                    data: io.BytesIO = self._decoding_413(file, original)  # type: ignore[no-redef]
-
-                    data_size_bytes = data.read(4)
-                    data_size = int.from_bytes(data_size_bytes, byteorder="little")
-
-                    result = zlib.decompress(data.read())
-
-                    result_size = len(result)
-
-                    if data_size == result_size:
-                        self.out_write(out_filename, result)
+                    data: bytes = self._decoding_413(file, original)  # type: ignore[no-redef]
+                    self.out_write(out_filename, data)
                 case _:
                     ...
 
