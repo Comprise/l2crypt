@@ -1,2 +1,2 @@
 ## Lineage 2 file decoder
-### Only supports versions 111 and 413
+### Only supports versions 111, 121, 413

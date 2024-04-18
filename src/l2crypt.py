@@ -42,18 +42,38 @@ class L2Crypt:
         with open(out_filename, mode="wb") as out:
             out.write(result)
 
+    @staticmethod
+    def _xor_decoding(
+        file_data: bytes,
+        key: int,
+    ) -> bytes:
+        data = io.BytesIO()
+
+        for i in file_data:
+            data.write(bytes([i ^ key]))
+
+        data.seek(0)
+        return data.read()
+
     def _decoding_111(
         self,
         file: io.BufferedReader,
     ) -> bytes:
         file.read(28)
-        data = io.BytesIO()
+        file_data = file.read()
+        data = self._xor_decoding(file_data, self.KEY_111)
+        return data
 
-        for i in file.read():
-            data.write(bytes([i ^ self.KEY_111]))
-
-        data.seek(0)
-        return data.read()
+    def _decoding_121(
+        self,
+        file: io.BufferedReader,
+        filename: str,
+    ) -> bytes:
+        file.read(28)
+        file_data = file.read()
+        key = sum(ord(char) for char in filename.lower()) & 0xFF
+        data = self._xor_decoding(file_data, key)
+        return data
 
     def _decoding_413(
         self,
@@ -74,7 +94,7 @@ class L2Crypt:
             if block_data_bytes_size == 124:
                 block_data = block_data_bytes.removeprefix(b"|")
             else:
-                block_data = block_data_bytes[1:].lstrip(bytes([0]))[:block_data_bytes_size]
+                block_data = block_data_bytes[1:].lstrip(b"\0")[:block_data_bytes_size]
 
             data.write(block_data)
             block = file.read(128)
@@ -89,7 +109,7 @@ class L2Crypt:
         data_unzip_size = len(data_unzip)
 
         if data_size != data_unzip_size:
-            raise Exception
+            raise Exception("Decoding error")
 
         return data_unzip
 
@@ -110,11 +130,14 @@ class L2Crypt:
                 case 111:
                     data: bytes = self._decoding_111(file)  # type: ignore[no-redef]
                     self.out_write(out_filename, data)
+                case 121:
+                    data = self._decoding_121(file, filename)  # type: ignore[no-redef]
+                    self.out_write(out_filename, data)
                 case 413:
                     data: bytes = self._decoding_413(file, original)  # type: ignore[no-redef]
                     self.out_write(out_filename, data)
                 case _:
-                    ...
+                    print("The decoded file is not supported")
 
 
 l2crypt = L2Crypt()
