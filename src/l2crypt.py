@@ -129,15 +129,14 @@ class L2Crypt:
             match version:
                 case 111:
                     data: bytes = self._decoding_111(file)  # type: ignore[no-redef]
-                    self.out_write(out_filename, data)
                 case 121:
-                    data = self._decoding_121(file, filename)  # type: ignore[no-redef]
-                    self.out_write(out_filename, data)
+                    data: bytes = self._decoding_121(file, filename)  # type: ignore[no-redef]
                 case 413:
                     data: bytes = self._decoding_413(file, original)  # type: ignore[no-redef]
-                    self.out_write(out_filename, data)
                 case _:
-                    print("The decoded file is not supported")
+                    raise Exception("The decoded file is not supported")
+
+            self.out_write(out_filename, data)
 
 
 l2crypt = L2Crypt()
