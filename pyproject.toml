@@ -6,7 +6,7 @@ authors = ["Elia Samoylov <mymerrymailbox@mail.ru>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12.2"
+python = "^3.12.3"
 pycryptodome = "^3.20.0"
 
 [tool.poetry.group.dev.dependencies]
