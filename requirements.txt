@@ -1,4 +1,4 @@
-pycryptodome==3.20.0 ; python_full_version >= "3.12.2" and python_full_version < "4.0.0" \
+pycryptodome==3.20.0 ; python_full_version >= "3.12.3" and python_full_version < "4.0.0" \
     --hash=sha256:06d6de87c19f967f03b4cf9b34e538ef46e99a337e9a61a77dbe44b2cbcf0690 \
     --hash=sha256:09609209ed7de61c2b560cc5c8c4fbf892f8b15b1faf7e4cbffac97db1fffda7 \
     --hash=sha256:210ba1b647837bfc42dd5a813cdecb5b86193ae11a3f5d972b9a0ae2c7e9e4b4 \
